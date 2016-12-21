@@ -285,6 +285,28 @@ public class HuaweiCMObjectParser {
         //object
         if(qName.equals("object")){
             objectDepth++;
+            
+            //Get the technology, vendor and version
+            if(objectDepth == 1 ){
+            while (attributes.hasNext()) {
+                Attribute attribute = attributes.next();
+                String attrName = attribute.getName().getLocalPart();
+                String attrValue =  attribute.getValue();
+                if (attrName.equals("vendor")) {
+                    this.vendor = attrValue;    
+                }
+                
+                if (attrName.equals("technique")) {
+                    this.technology = attrValue;    
+                }
+                
+                if (attrName.equals("version")) {
+                    this.version = attrValue;    
+                }
+            }
+            }
+            
+            return;
         }
     }
            
@@ -342,8 +364,8 @@ public class HuaweiCMObjectParser {
         
         if(qName.equals("object")){
             objectDepth--;
-            String paramNames = "FileName";
-            String paramValues = baseFileName;
+            String paramNames = "FileName,technology,vendor,version";
+            String paramValues = baseFileName+","+technology+","+vendor+","+version;
         
             if(!moiPrintWriters.containsKey(className)){
                 String moiFile = outputDirectory + File.separatorChar + className +  ".csv";
