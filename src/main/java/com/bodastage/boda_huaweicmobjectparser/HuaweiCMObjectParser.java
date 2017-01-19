@@ -71,6 +71,12 @@ public class HuaweiCMObjectParser {
     private String outputDirectory = "/tmp";
     
     /**
+     *
+     * @since 1.0.0
+     */
+    private String nodeTypeVersion = "";
+    
+    /**
      * Parser start time. 
      * 
      * @since 1.0.4
@@ -246,14 +252,20 @@ public class HuaweiCMObjectParser {
         if(qName.equals("class")){
             classDepth++;
 
+
             while (attributes.hasNext()) {
                 Attribute attribute = attributes.next();
                 String attrName = attribute.getName().getLocalPart();
                 String attrValue =  attribute.getValue();
                 if (attrName.equals("name")) {
-                    className = attrValue;
+                    className = addUToUMTSCellMOs(attrValue);
+                    //className = attrValue;
                     LinkedHashMap<String,String> Lhm = new LinkedHashMap<String,String>();
                     classNameAttrsMap.put(className,Lhm);    
+                    
+                    if(classDepth == 1){
+                        nodeTypeVersion = attrValue;
+                    }
                 }
             }
         }
@@ -380,6 +392,19 @@ public class HuaweiCMObjectParser {
                 while (iter.hasNext()) {
                     Map.Entry<String, String> me = iter.next();
                     moiAttributes.push(me.getKey());
+                    
+                    //Break UCELLSIBSWITCH.SIBCFGBITMAP into the different sib bit maps
+                    if(className.startsWith("UCELLSIBSWITCH") && me.getKey().equals("SIBCFGBITMAP")){
+                    
+                        pName += "," + me.getKey() +"_SIB11BIS,";
+                        pName += me.getKey() +"_SIB12,";
+                        pName += me.getKey() +"_SIB18,";
+                        pName += me.getKey() +"_SIB19,";
+                        pName += me.getKey() +"_SIB2,";
+                        pName += me.getKey() +"_SIB4";
+                        continue;
+                    }
+                    
                     pName += "," + me.getKey();
                 }
                 
@@ -394,6 +419,20 @@ public class HuaweiCMObjectParser {
                 String moiName = moiAttributes.get(i).toString();
                 
                 if( moiParameterValueMap.containsKey(moiName) ){
+                    
+                    //Break UCELLSIBSWITCH.SIBCFGBITMAP into the different sib bit maps
+                    if(className.startsWith("UCELLSIBSWITCH") && moiName.equals("SIBCFGBITMAP")){
+                        String tempValue = moiParameterValueMap.get(moiName);
+                        String[] valueArray = tempValue.split("&");
+                        
+                        for(int j = 0; j < valueArray.length; j++){
+                            String v = valueArray[j];
+                            String[] vArray = v.split("-");
+                            paramValues += "," + toCSVFormat(vArray[1]);
+                        }
+                        continue;
+                    }
+                    
                     paramValues += "," + toCSVFormat(moiParameterValueMap.get(moiName));
                 }else{
                     paramValues += ",";
@@ -510,5 +549,24 @@ public class HuaweiCMObjectParser {
      */
     public void setFileName(String filename ){
         this.dataFile = filename;
+    }
+    
+    /**
+     * Add "U" to class name attribute value.
+     * 
+     * @param classNameAttrValue 
+     * 
+     * @TODO: Remove nodeype from the file name.
+     */
+    public String addUToUMTSCellMOs(String classNameAttrValue ){
+        String newMOName = classNameAttrValue;
+        
+        if( classDepth == 1 ) return newMOName;
+        
+        if( this.technology.equals("WCDMA") && 
+                classNameAttrValue.startsWith("CELL") ){
+            newMOName = "U" + classNameAttrValue;
+        }
+        return newMOName;
     }
 }
