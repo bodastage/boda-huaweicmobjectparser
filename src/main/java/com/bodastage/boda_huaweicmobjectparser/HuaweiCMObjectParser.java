@@ -39,6 +39,14 @@ public class HuaweiCMObjectParser {
     private Map<String, Stack> moColumns = new LinkedHashMap<String, Stack>();
     
     /**
+     * 
+     * Track parameter with children.
+     * 
+     * @since 1.0.0
+     */
+    private Map<String, Stack> parameterChildMap = new LinkedHashMap<String, Stack>();
+    
+    /**
      * This holds a map of the Managed Object Instances (MOIs) to the respective
      * csv print writers.
      * 
@@ -393,15 +401,26 @@ public class HuaweiCMObjectParser {
                     Map.Entry<String, String> me = iter.next();
                     moiAttributes.push(me.getKey());
                     
-                    //Break UCELLSIBSWITCH.SIBCFGBITMAP into the different sib bit maps
-                    if(className.startsWith("UCELLSIBSWITCH") && me.getKey().equals("SIBCFGBITMAP")){
+                    String parameterName = me.getKey();
                     
-                        pName += "," + me.getKey() +"_SIB11BIS,";
-                        pName += me.getKey() +"_SIB12,";
-                        pName += me.getKey() +"_SIB18,";
-                        pName += me.getKey() +"_SIB19,";
-                        pName += me.getKey() +"_SIB2,";
-                        pName += me.getKey() +"_SIB4";
+                    //Handle multivalued parameter or parameters with children
+                    String tempValue = classNameAttrsMap.get(className).get(parameterName);
+                    if(tempValue.matches("([^-]+-[^-]+&).*")){
+                        String mvParameter = className + "_" + parameterName;
+                        parameterChildMap.put(mvParameter, null);
+                        Stack children = new Stack();
+                        
+                        String[] valueArray = tempValue.split("&");
+                        
+                        for(int j = 0; j < valueArray.length; j++){
+                            String v = valueArray[j];
+                            String[] vArray = v.split("-");
+                            String childParameter = vArray[0];
+                            pName += "," + parameterName + "_" + childParameter;
+                            children.push(childParameter);
+                        }
+                        parameterChildMap.put(mvParameter, children);
+                        
                         continue;
                     }
                     
@@ -415,13 +434,15 @@ public class HuaweiCMObjectParser {
             Stack moiAttributes = moColumns.get(className);
             moiParameterValueMap = classNameAttrsMap.get(className);
 
+            
+            
             for(int i = 0; i< moiAttributes.size(); i++){
                 String moiName = moiAttributes.get(i).toString();
+                String mvParameter = className + "_" + moiName;
                 
                 if( moiParameterValueMap.containsKey(moiName) ){
-                    
-                    //Break UCELLSIBSWITCH.SIBCFGBITMAP into the different sib bit maps
-                    if(className.startsWith("UCELLSIBSWITCH") && moiName.equals("SIBCFGBITMAP")){
+                    //Handle multivalued parameters
+                    if( parameterChildMap.containsKey(mvParameter)){
                         String tempValue = moiParameterValueMap.get(moiName);
                         String[] valueArray = tempValue.split("&");
                         
