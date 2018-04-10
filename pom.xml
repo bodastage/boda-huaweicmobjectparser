@@ -33,7 +33,7 @@
       <configuration>
         <archive>
           <manifest>
-            <mainClass>com.bodastage.boda_huaweicmobjectparser.App</mainClass>
+            <mainClass>com.bodastage.boda_huaweicmobjectparser.HuaweiCMObjectParser</mainClass>
           </manifest>
         </archive>
         <descriptorRefs>

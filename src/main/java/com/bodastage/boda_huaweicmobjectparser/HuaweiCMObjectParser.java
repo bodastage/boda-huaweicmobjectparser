@@ -265,7 +265,7 @@ public class HuaweiCMObjectParser {
      * @param filename
      */
     public void setParameterFile(String filename) {
-        logger.info("Setting parameter file" + filename);
+        //logger.info("Setting parameter file" + filename);
         parameterFile = filename;
     }
 
@@ -644,7 +644,7 @@ public class HuaweiCMObjectParser {
             
             if (!moColumns.containsKey(classNameMinusNodeType)) return;
             
-            logger.info("classNameMinusNodeType : " + classNameMinusNodeType);
+            //logger.info("classNameMinusNodeType : " + classNameMinusNodeType);
             
             //Get the parameter listed in the parameter file for the managed object
             Stack<String> parameterList  = moColumns.get(classNameMinusNodeType);
@@ -868,9 +868,9 @@ public class HuaweiCMObjectParser {
      * @version 1.0.0
      */
     static public void showHelp(){
-        System.out.println("boda-huaweicmobjectparser 1.0.0. Copyright (c) 2016 Bodastage(http://www.bodastage.com)");
+        System.out.println("boda-huaweicmobjectparser Copyright (c) 2018 Bodastage Solutions(http://www.bodastage.com)");
         System.out.println("Parses Huawei GExport configuration data file XML to csv.");
-        System.out.println("Usage: java -jar boda-huaweicmobjectparser.jar <fileToParse.xml> <outputDirectory>");
+        System.out.println("Usage: java -jar boda-huaweicmobjectparser.jar <fileToParse.xml|inputDirectory> <outputDirectory> [parser.cfg]");
     }
     
     /**
