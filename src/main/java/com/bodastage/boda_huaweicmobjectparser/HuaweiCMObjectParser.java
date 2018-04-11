@@ -220,6 +220,15 @@ public class HuaweiCMObjectParser {
      * Parameter file
      */
     private String parameterFile = null;
+    
+    /**
+     * File extraction time
+     * 
+     * This is extract as the last digits before the file extension. e.g.
+     * GExport_RNCNAME_10.22.111.88_20171211060843.xml.
+     * It is required that the Gexport CM dump be of the format above.
+     */
+    private String dateTime = "";
 
     /**
      * Parsing state
@@ -383,6 +392,9 @@ public class HuaweiCMObjectParser {
         XMLEventReader eventReader = factory.createXMLEventReader(
                 new FileReader(inputFilename));
         baseFileName = getFileBasename(inputFilename);
+        
+        //Extract date from timestamp
+        dateTime = inputFilename.replaceFirst(".*_(\\d+)\\.\\D{3}", "$1");
 
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
@@ -552,8 +564,8 @@ public class HuaweiCMObjectParser {
 
         if (qName.equals("object") && parameterFile == null) {
             objectDepth--;
-            String paramNames = "FILENAME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
-            String paramValues = baseFileName + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
+            String paramNames = "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
+            String paramValues = baseFileName + "," + dateTime + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
 
             if (!moiPrintWriters.containsKey(className)) {
                 String moiFile = outputDirectory + File.separatorChar + className + ".csv";
@@ -709,6 +721,8 @@ public class HuaweiCMObjectParser {
                         paramValues += "," + version;
                     }else if(moiName.equals("NETYPE")){
                         paramValues += "," + nodeTypeVersion;
+                    }else if(moiName.equals("DATETIME")){
+                        paramValues += "," + dateTime;
                     }else{
                         paramValues += ",";
                     }
