@@ -395,6 +395,7 @@ public class HuaweiCMObjectParser {
         
         //Extract date from timestamp
         dateTime = inputFilename.replaceFirst(".*_(\\d+)\\.\\D{3}", "$1");
+        dateTime = dateTime.replaceFirst("(\\d{4})(\\d{2})(\\d{2})(\\d{2})(\\d{2})(\\d{2})", "$1-$2-$3 $4:$5:$6");
 
         while (eventReader.hasNext()) {
             XMLEvent event = eventReader.nextEvent();
