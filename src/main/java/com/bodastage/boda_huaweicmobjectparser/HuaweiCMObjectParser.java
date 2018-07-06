@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Stack;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -37,6 +38,8 @@ import org.slf4j.LoggerFactory;
  */
 public class HuaweiCMObjectParser {
 
+    final static String VERSION = "1.0.3";
+    
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
     /**
@@ -165,9 +168,10 @@ public class HuaweiCMObjectParser {
      * @since 1.0.0
      * @version 1.0.0
      */
-    private Map<String, LinkedHashMap<String, String>> classNameAttrsMap
-            = new LinkedHashMap<String, LinkedHashMap<String, String>>();
-
+//    private Map<String, LinkedHashMap<String, String>> classNameAttrsMap
+//            = new LinkedHashMap<String, LinkedHashMap<String, String>>();
+    LinkedHashMap<String, String> classNameAttrsMap = new LinkedHashMap<String, String>();
+    
     /**
      * ClassName tag stack.
      *
@@ -234,7 +238,7 @@ public class HuaweiCMObjectParser {
      * Parsing state
      *
      */
-    private int parserState = ParserStates.EXTRACTING_VALUES;
+    private int parserState = ParserStates.EXTRACTING_PARAMETERS;
 
     /**
      * Extract parameter list from parameter file
@@ -343,6 +347,7 @@ public class HuaweiCMObjectParser {
 
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
+//                    logger.error("className:" + className);
                     System.out.println("Skipping file: " + this.baseFileName + "\n");
 
                     resetInternalVariables();
@@ -366,6 +371,7 @@ public class HuaweiCMObjectParser {
 
             parserState = ParserStates.EXTRACTING_VALUES;
         }
+
 
         //Reset variables
         resetInternalVariables();
@@ -450,7 +456,7 @@ public class HuaweiCMObjectParser {
                     className = addUToUMTSCellMOs(attrValue);
                     //className = attrValue;
                     LinkedHashMap<String, String> Lhm = new LinkedHashMap<String, String>();
-                    classNameAttrsMap.put(className, Lhm);
+//                    classNameAttrsMap.put(className, Lhm);
 
                     if (classDepth == 1) {
                         nodeTypeVersion = attrValue;
@@ -476,9 +482,9 @@ public class HuaweiCMObjectParser {
                 }
             }
 
-            LinkedHashMap<String, String> Lhm = classNameAttrsMap.get(className);
-            Lhm.put(paramName, paramValue);
-            classNameAttrsMap.put(className, Lhm);
+//            LinkedHashMap<String, String> Lhm = classNameAttrsMap.get(className);
+//            Lhm.put(paramName, paramValue);
+            classNameAttrsMap.put(paramName, paramValue);
 
             return;
         }
@@ -563,30 +569,31 @@ public class HuaweiCMObjectParser {
             return;
         }
 
-        if (qName.equals("object") && parameterFile == null) {
+        //Extract parameters
+        if(qName.equals("object") 
+                && parserState == ParserStates.EXTRACTING_PARAMETERS 
+                && parameterFile == null){
             objectDepth--;
-            String paramNames = "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
-            String paramValues = baseFileName + "," + dateTime + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
-
-            if (!moiPrintWriters.containsKey(className)) {
-                String moiFile = outputDirectory + File.separatorChar + className + ".csv";
-                moiPrintWriters.put(className, new PrintWriter(moiFile));
-
-                Stack moiAttributes = new Stack();
-                moiParameterValueMap = classNameAttrsMap.get(className);
-                Iterator<Map.Entry<String, String>> iter
+            
+            Stack moiAttributes = new Stack();
+            
+            if(moColumns.containsKey(className)){
+                moiAttributes = moColumns.get(className);
+            }
+            
+//            moiParameterValueMap = classNameAttrsMap.get(className);
+            moiParameterValueMap = classNameAttrsMap;
+            Iterator<Map.Entry<String, String>> iter
                         = moiParameterValueMap.entrySet().iterator();
-
-                String pName = paramNames;
-                while (iter.hasNext()) {
+            
+            while (iter.hasNext()) {
                     Map.Entry<String, String> me = iter.next();
-                    moiAttributes.push(me.getKey());
-
                     String parameterName = me.getKey();
 
-                    //Handle multivalued parameter or parameters with children
-                    String tempValue = classNameAttrsMap.get(className).get(parameterName);
-                    if (tempValue.matches("([^-]+-[^-]+&).*")) {
+                    
+//                    String tempValue = classNameAttrsMap.get(className).get(parameterName);
+                    String tempValue = classNameAttrsMap.get(parameterName);
+                    if (tempValue.matches("([^-]+-[^-]+&).*") && !parameterName.equals("ACTION")) {
                         String mvParameter = className + "_" + parameterName;
                         parameterChildMap.put(mvParameter, null);
                         Stack children = new Stack();
@@ -597,23 +604,55 @@ public class HuaweiCMObjectParser {
                             String v = valueArray[j];
                             String[] vArray = v.split("-");
                             String childParameter = vArray[0];
-                            pName += "," + parameterName + "_" + childParameter;
-                            children.push(childParameter);
+                            String child =  parameterName + "_" + childParameter;
+                            if(!moiAttributes.contains(child)){
+                                moiAttributes.push(child);
+                            }
                         }
                         parameterChildMap.put(mvParameter, children);
 
                         continue;
                     }
+                    
+                    if(!moiAttributes.contains(parameterName)){
+                        moiAttributes.push(parameterName);
+                    }
+                    
+            }
 
-                    pName += "," + me.getKey();
+            moColumns.put(className, moiAttributes);
+            
+            moiParameterValueMap.clear();
+//            classNameAttrsMap.get(className).clear();
+            classNameAttrsMap.clear();
+            return;
+        }
+        
+        //Extract parameter values when paramete rfile is not provided
+        if (qName.equals("object") && parameterFile == null) {
+            objectDepth--;
+            String paramNames = "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
+            String paramValues = baseFileName + "," + dateTime + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
+
+            if (!moiPrintWriters.containsKey(className) ) {
+                String moiFile = outputDirectory + File.separatorChar + className + ".csv";
+                moiPrintWriters.put(className, new PrintWriter(moiFile));
+
+                String pName = paramNames;
+
+                Stack moiAttributes = moColumns.get(className);
+                for (int i = 0; i < moiAttributes.size(); i++) {
+                    String parameterName = moiAttributes.get(i).toString();
+                    pName += "," + parameterName;
                 }
 
-                moColumns.put(className, moiAttributes);
                 moiPrintWriters.get(className).println(pName);
+                moiPrintWriters.get(className).flush();
             }
 
             Stack moiAttributes = moColumns.get(className);
-            moiParameterValueMap = classNameAttrsMap.get(className);
+            moiParameterValueMap = classNameAttrsMap;
+//            moiParameterValueMap = classNameAttrsMap.get(className);
 
             for (int i = 0; i < moiAttributes.size(); i++) {
                 String moiName = moiAttributes.get(i).toString();
@@ -641,12 +680,13 @@ public class HuaweiCMObjectParser {
 
             PrintWriter pw = moiPrintWriters.get(className);
             pw.println(paramValues);
+            pw.flush();
 
             moiParameterValueMap.clear();
-            classNameAttrsMap.get(className).clear();
+//            classNameAttrsMap.get(className).clear();
+            classNameAttrsMap.clear();
             return;
         }
-        
         
         //Extract values when parameter file is provided 
         if (qName.equals("object") && parameterFile != null) {
@@ -661,9 +701,6 @@ public class HuaweiCMObjectParser {
             
             //Get the parameter listed in the parameter file for the managed object
             Stack<String> parameterList  = moColumns.get(classNameMinusNodeType);
-            
-            //String paramNames = "FILENAME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
-            //String paramValues = baseFileName + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
 
             String paramNames = "";
             String paramValues = "";
@@ -684,10 +721,12 @@ public class HuaweiCMObjectParser {
                  
                 pName = pName.replaceFirst(",", "");
                 moiPrintWriters.get(className).println(pName);
+                moiPrintWriters.get(className).flush();
             }
 
             Stack moiAttributes = moColumns.get(classNameMinusNodeType);
-            moiParameterValueMap = classNameAttrsMap.get(className);
+            moiParameterValueMap = classNameAttrsMap;
+//            moiParameterValueMap = classNameAttrsMap.get(className);
 
             for (int i = 0; i < moiAttributes.size(); i++) {
                 String moiName = moiAttributes.get(i).toString();
@@ -736,9 +775,11 @@ public class HuaweiCMObjectParser {
             
             PrintWriter pw = moiPrintWriters.get(className);
             pw.println(paramValues);
+            pw.flush();
 
             moiParameterValueMap.clear();
-            classNameAttrsMap.get(className).clear();
+//            classNameAttrsMap.get(className).clear();
+            classNameAttrsMap.clear();
             return;
         }
     }
@@ -883,7 +924,7 @@ public class HuaweiCMObjectParser {
      * @version 1.0.0
      */
     static public void showHelp(){
-        System.out.println("boda-huaweicmobjectparser Copyright (c) 2018 Bodastage Solutions(http://www.bodastage.com)");
+        System.out.println("boda-huaweicmobjectparser " + VERSION + " Copyright (c) 2018 Bodastage Solutions(http://www.bodastage.com)");
         System.out.println("Parses Huawei GExport configuration data file XML to csv.");
         System.out.println("Usage: java -jar boda-huaweicmobjectparser.jar <fileToParse.xml|inputDirectory> <outputDirectory> [parser.cfg]");
     }
