@@ -270,6 +270,8 @@ public class HuaweiCMObjectParser {
     public void resetInternalVariables() {
         tagData = "";
         nodeTypeVersion = "";
+        objectDepth = 0;
+        classDepth = 0;
     }
 
     /**
@@ -348,6 +350,7 @@ public class HuaweiCMObjectParser {
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
 //                    logger.error("className:" + className);
+//                    logger.error("classNameAttrsMap:" + classNameAttrsMap.toString());
                     System.out.println("Skipping file: " + this.baseFileName + "\n");
 
                     resetInternalVariables();
@@ -479,12 +482,48 @@ public class HuaweiCMObjectParser {
 
                 if (attrName.equals("value")) {
                     paramValue = attrValue;
+                    
+                    String tempValue = paramValue;
+                    if (tempValue.matches("([^-]+-[^-]+&).*") && !paramName.equals("ACTION")) {
+                        
+
+                        String mvParameter = className + "_" + paramName;
+                        Stack children = new Stack();
+                        
+                        if( parserState == ParserStates.EXTRACTING_PARAMETERS){
+                            parameterChildMap.put(mvParameter, null);
+                        }
+                        
+                        String[] valueArray = tempValue.split("&");
+
+                        for (int j = 0; j < valueArray.length; j++) {
+                            String v = valueArray[j];
+                            String[] vArray = v.split("-");
+                            String childParameter = vArray[0];
+                            String childParameterValue = vArray[1];
+                            String child =  paramName + "_" + childParameter;
+                            
+                            classNameAttrsMap.put(child, childParameterValue);
+                            
+                            if( parserState == ParserStates.EXTRACTING_PARAMETERS){
+                                 children.push(childParameter);
+                            }
+                            
+ 
+                        }
+                        
+                        if( parserState == ParserStates.EXTRACTING_PARAMETERS){
+                             parameterChildMap.put(mvParameter, children);
+                        }
+                        
+                    }else{
+                       classNameAttrsMap.put(paramName, paramValue);
+                    }
+                    
                 }
             }
 
-//            LinkedHashMap<String, String> Lhm = classNameAttrsMap.get(className);
-//            Lhm.put(paramName, paramValue);
-            classNameAttrsMap.put(paramName, paramValue);
+            
 
             return;
         }
@@ -581,7 +620,6 @@ public class HuaweiCMObjectParser {
                 moiAttributes = moColumns.get(className);
             }
             
-//            moiParameterValueMap = classNameAttrsMap.get(className);
             moiParameterValueMap = classNameAttrsMap;
             Iterator<Map.Entry<String, String>> iter
                         = moiParameterValueMap.entrySet().iterator();
@@ -590,8 +628,6 @@ public class HuaweiCMObjectParser {
                     Map.Entry<String, String> me = iter.next();
                     String parameterName = me.getKey();
 
-                    
-//                    String tempValue = classNameAttrsMap.get(className).get(parameterName);
                     String tempValue = classNameAttrsMap.get(parameterName);
                     if (tempValue.matches("([^-]+-[^-]+&).*") && !parameterName.equals("ACTION")) {
                         String mvParameter = className + "_" + parameterName;
@@ -608,6 +644,7 @@ public class HuaweiCMObjectParser {
                             if(!moiAttributes.contains(child)){
                                 moiAttributes.push(child);
                             }
+                            children.push(childParameter);
                         }
                         parameterChildMap.put(mvParameter, children);
 
@@ -623,7 +660,6 @@ public class HuaweiCMObjectParser {
             moColumns.put(className, moiAttributes);
             
             moiParameterValueMap.clear();
-//            classNameAttrsMap.get(className).clear();
             classNameAttrsMap.clear();
             return;
         }
@@ -652,26 +688,12 @@ public class HuaweiCMObjectParser {
 
             Stack moiAttributes = moColumns.get(className);
             moiParameterValueMap = classNameAttrsMap;
-//            moiParameterValueMap = classNameAttrsMap.get(className);
 
             for (int i = 0; i < moiAttributes.size(); i++) {
                 String moiName = moiAttributes.get(i).toString();
                 String mvParameter = className + "_" + moiName;
 
                 if (moiParameterValueMap.containsKey(moiName)) {
-                    //Handle multivalued parameters
-                    if (parameterChildMap.containsKey(mvParameter)) {
-                        String tempValue = moiParameterValueMap.get(moiName);
-                        String[] valueArray = tempValue.split("&");
-
-                        for (int j = 0; j < valueArray.length; j++) {
-                            String v = valueArray[j];
-                            String[] vArray = v.split("-");
-                            paramValues += "," + toCSVFormat(vArray[1]);
-                        }
-                        continue;
-                    }
-
                     paramValues += "," + toCSVFormat(moiParameterValueMap.get(moiName));
                 } else {
                     paramValues += ",";
@@ -683,7 +705,6 @@ public class HuaweiCMObjectParser {
             pw.flush();
 
             moiParameterValueMap.clear();
-//            classNameAttrsMap.get(className).clear();
             classNameAttrsMap.clear();
             return;
         }
