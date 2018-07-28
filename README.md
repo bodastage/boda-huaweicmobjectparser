@@ -29,7 +29,31 @@ Below is the expected format of the input file:
 </bulkCmConfigDataFile>
 ```
 # Usage
-java -jar  huaweicmobjectparser.jar data.xml outputDirectory
+
+```
+usage: java -jar boda-huaweicmobjectparser.jar
+Parses Huawei GExport configuration data file XML to csv
+
+ -c,--parameter-config <PARAMETER_CONFIG>   parameter configuration file
+ -h,--help                                  show help
+ -i,--input-file <INPUT_FILE>               input file or directory name
+ -m,--meta-fields                           add meta fields to extracted
+                                            parameters.
+                                            FILENAME,DATETIME,TECHNOLOGY,V
+                                            ENDOR,VERSION,NETYPE
+ -o,--output-directory <OUTPUT_DIRECTORY>   output directory name
+ -p,--extract-parameters                    extract only the managed
+                                            objects and parameters
+ -v,--version                               display version
+
+Examples:
+java -jar boda-huaweicmobjectparser.jar -i Gexport_Dump.xml -o out_folder
+java -jar boda-huaweicmobjectparser.jar -i input_folder -o out_folder
+java -jar boda-huaweicmobjectparser.jar -i input_folder -p
+java -jar boda-huaweicmobjectparser.jar -i input_folder -p -m
+
+Copyright (c) 2018 Bodastage Solutions(http://www.bodastage.com)
+```
 
 # Download and installation
 The lastest compiled jar file is availabled in the dist directory. Alternatively, download it directly from [here](https://github.com/bodastage/boda-huaweicmobjectparser/raw/master/dist/boda-huaweicmobjectparser.jar).
