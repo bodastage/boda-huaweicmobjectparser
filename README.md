@@ -56,10 +56,10 @@ Copyright (c) 2018 Bodastage Solutions(http://www.bodastage.com)
 ```
 
 # Download and installation
-The lastest compiled jar file is availabled in the dist directory. Alternatively, download it directly from [here](https://github.com/bodastage/boda-huaweicmobjectparser/raw/master/dist/boda-huaweicmobjectparser.jar).
+Download the latest jar file  from the [latest release](https://github.com/bodastage/boda-huaweicmobjectparser/releases/download/v1.0.5/boda-huaweicmobjectparser.jar).
 
 # Requirements
-To run the jar file, you need Java version 1.6 and above.
+To run the jar file, you need Java version 1.8 and above.
 
 # Getting help
 To report issues with the application or request new features use the issue [tracker](https://github.com/bodastage/boda-huaweicmobjectparser/issues). For help and customizations send an email to info@bodastage.com.
