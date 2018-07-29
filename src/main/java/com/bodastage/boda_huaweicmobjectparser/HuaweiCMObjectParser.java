@@ -277,9 +277,13 @@ public class HuaweiCMObjectParser {
      *
      * @param filename
      */
-    public void getParametersToExtract(String filename) throws FileNotFoundException, IOException {
+    public void getParametersToExtract(String filename) throws FileNotFoundException, IOException, Exception {
         BufferedReader br = new BufferedReader(new FileReader(filename));
         for (String line; (line = br.readLine()) != null;) {
+            if(!line.contains(":")){
+                throw new Exception("Wrong format. Contents:" + line);
+            }
+            
             String[] moAndParameters = line.split(":");
             String mo = moAndParameters[0];
             String[] parameters = moAndParameters[1].split(",");
@@ -443,10 +447,13 @@ public class HuaweiCMObjectParser {
             String moParameterListString = moName + ":";
 
             if( extractMetaFields == true ){
-                moParameterListString += "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE,";
+                moParameterListString += "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
             }
             
             int size = moParameterList.size();
+            if(extractMetaFields == true && size > 0 ){
+                    moParameterListString += ",";
+            }
             
             for(int i = 0; i < size; i++){
                 String param = (String)moParameterList.get(i);
@@ -1097,7 +1104,7 @@ public class HuaweiCMObjectParser {
        }catch(IllegalArgumentException e){
            
        } catch (ParseException ex) {
-            //java.util.logging.Logger.getLogger(HuaweiCMObjectParser.class.getName()).log(Level.SEVERE, null, ex);
+//            java.util.logging.Logger.getLogger(HuaweiCMObjectParser.class.getName()).log(Level.SEVERE, null, ex);
         }
        
        
@@ -1110,7 +1117,6 @@ public class HuaweiCMObjectParser {
             }
             
             //show help
-    //        if( (args.length != 2 && args.length != 3) || (args.length == 1 && args[0] == "-h")){
             if( showHelpMessage == true || 
                 inputFile == null || 
                 ( outputDirectory == null && onlyExtractParameters == false) ){
