@@ -347,7 +347,7 @@ public class HuaweiCMObjectParser {
             this.parseFile(this.dataSource);
             if (parserState == ParserStates.EXTRACTING_PARAMETERS && extractParametersOnly == false) {
                 System.out.println("Done.");
-            } else {
+            } else if(parserState == ParserStates.EXTRACTING_VALUES && extractParametersOnly == false) {
                 System.out.println("Done.");
                 //System.out.println(this.baseFileName + " successfully parsed.\n");
             }
