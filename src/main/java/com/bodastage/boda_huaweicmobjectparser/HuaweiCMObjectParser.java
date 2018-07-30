@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.6";
+    final static String VERSION = "1.0.7";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -789,14 +789,14 @@ public class HuaweiCMObjectParser {
             objectDepth--;
             
             //Skip mo if it is not in the parameter file 
-            String classNameMinusNodeType  = className.replaceAll("_.*$" ,"");
+            //String className  = className.replaceAll("_.*$" ,"");
             
-            if (!moColumns.containsKey(classNameMinusNodeType)) return;
+            if (!moColumns.containsKey(className)) return;
             
-            //logger.info("classNameMinusNodeType : " + classNameMinusNodeType);
+            //logger.info("className : " + className);
             
             //Get the parameter listed in the parameter file for the managed object
-            Stack<String> parameterList  = moColumns.get(classNameMinusNodeType);
+            Stack<String> parameterList  = moColumns.get(className);
 
             String paramNames = "";
             String paramValues = "";
@@ -807,7 +807,7 @@ public class HuaweiCMObjectParser {
                 String moiFile = outputDirectory + File.separatorChar + className + ".csv";
                 moiPrintWriters.put(className, new PrintWriter(moiFile));
 
-                Stack moiAttributes = moColumns.get(classNameMinusNodeType);
+                Stack moiAttributes = moColumns.get(className);
     
                 String pName = paramNames;
                  for(int i = 0; i< moiAttributes.size(); i++){
@@ -820,7 +820,7 @@ public class HuaweiCMObjectParser {
                 moiPrintWriters.get(className).flush();
             }
 
-            Stack moiAttributes = moColumns.get(classNameMinusNodeType);
+            Stack moiAttributes = moColumns.get(className);
             moiParameterValueMap = classNameAttrsMap;
 //            moiParameterValueMap = classNameAttrsMap.get(className);
 
@@ -828,7 +828,7 @@ public class HuaweiCMObjectParser {
                 String moiName = moiAttributes.get(i).toString();
                 
                 //String mvParameter = className + "_" + moiName;
-                String mvParameter = classNameMinusNodeType + "_" + moiName;
+                String mvParameter = className + "_" + moiName;
 
                 if (moiParameterValueMap.containsKey(moiName)) {
                     //Handle multivalued parameters
