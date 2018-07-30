@@ -4,7 +4,7 @@
   <groupId>com.bodastage.boda_huaweicmobjectparser</groupId>
   <artifactId>boda-huaweicmobjectparser</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.5-SNAPSHOT</version>
+  <version>1.0.6-SNAPSHOT</version>
   <name>boda-huaweicmobjectparser</name>
   <url>http://maven.apache.org</url>
   <dependencies>

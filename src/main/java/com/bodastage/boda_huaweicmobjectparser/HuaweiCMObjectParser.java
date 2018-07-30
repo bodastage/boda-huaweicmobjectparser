@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.1.0";
+    final static String VERSION = "1.0.6";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -555,14 +555,13 @@ public class HuaweiCMObjectParser {
                 String attrName = attribute.getName().getLocalPart();
                 String attrValue = attribute.getValue();
                 if (attrName.equals("name")) {
-                    paramName = attrValue;
+                    paramName = attrValue.toUpperCase();
                 }
 
                 if (attrName.equals("value")) {
                     paramValue = attrValue;
                     
                     String tempValue = paramValue;
-//                    if (tempValue.matches("([^-]+-[^-]+&).*") && !paramName.equals("ACTION")) {
                     if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+$") && !paramName.equals("ACTION")) {
                         
 
@@ -587,8 +586,6 @@ public class HuaweiCMObjectParser {
                             if( parserState == ParserStates.EXTRACTING_PARAMETERS){
                                  children.push(childParameter);
                             }
-                            
- 
                         }
                         
                         if( parserState == ParserStates.EXTRACTING_PARAMETERS){
