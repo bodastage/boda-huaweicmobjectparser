@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.7";
+    final static String VERSION = "1.0.8";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -254,7 +254,7 @@ public class HuaweiCMObjectParser {
     
     /**
      * Add meta fields to each MO.
-     * FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE 
+     * FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE 
      */
     private Boolean extractMetaFields = false;
     
@@ -447,7 +447,7 @@ public class HuaweiCMObjectParser {
             String moParameterListString = moName + ":";
 
             if( extractMetaFields == true ){
-                moParameterListString += "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
+                moParameterListString += "FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE";
             }
             
             int size = moParameterList.size();
@@ -742,7 +742,7 @@ public class HuaweiCMObjectParser {
         //Extract parameter values when paramete rfile is not provided
         if (qName.equals("object") && parameterFile == null) {
             objectDepth--;
-            String paramNames = "FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE";
+            String paramNames = "FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE";
             String paramValues = baseFileName + "," + dateTime + "," + technology + "," + vendor + "," + version + "," + nodeTypeVersion;
 
             if (!moiPrintWriters.containsKey(className) ) {
@@ -849,13 +849,13 @@ public class HuaweiCMObjectParser {
                     
                     if(moiName.equals("FILENAME")){
                         paramValues += "," + baseFileName;
-                    }else if(moiName.equals("TECHNOLOGY")){
+                    }else if(moiName.equals("NE_TECHNOLOGY")){
                         paramValues += "," + technology;
-                    }else if(moiName.equals("VENDOR")){
+                    }else if(moiName.equals("NE_VENDOR")){
                         paramValues += "," + vendor;
-                    }else if(moiName.equals("VERSION")){
+                    }else if(moiName.equals("NE_VERSION")){
                         paramValues += "," + version;
-                    }else if(moiName.equals("NETYPE")){
+                    }else if(moiName.equals("NE_TYPE")){
                         paramValues += "," + nodeTypeVersion;
                     }else if(moiName.equals("DATETIME")){
                         paramValues += "," + dateTime;
@@ -1043,12 +1043,12 @@ public class HuaweiCMObjectParser {
        Boolean onlyExtractParameters = false;
        Boolean showHelpMessage = false;
        Boolean showVersion = false;
-       Boolean attachMetaFields = false; //Attach mattachMetaFields FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE
+       Boolean attachMetaFields = false; //Attach mattachMetaFields FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE
        
        try{ 
             options.addOption( "p", "extract-parameters", false, "extract only the managed objects and parameters" );
             options.addOption( "v", "version", false, "display version" );
-            options.addOption( "m", "meta-fields", false, "add meta fields to extracted parameters. FILENAME,DATETIME,TECHNOLOGY,VENDOR,VERSION,NETYPE" );
+            options.addOption( "m", "meta-fields", false, "add meta fields to extracted parameters. FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE" );
             options.addOption( Option.builder("i")
                     .longOpt( "input-file" )
                     .desc( "input file or directory name")
