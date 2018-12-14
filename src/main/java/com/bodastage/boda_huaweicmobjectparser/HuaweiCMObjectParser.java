@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.8";
+    final static String VERSION = "1.0.9";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -534,7 +534,7 @@ public class HuaweiCMObjectParser {
                 String attrName = attribute.getName().getLocalPart();
                 String attrValue = attribute.getValue();
                 if (attrName.equals("name")) {
-                    className = addUToUMTSCellMOs(attrValue);
+                    className = attrValue;
                     //className = attrValue;
                     LinkedHashMap<String, String> Lhm = new LinkedHashMap<String, String>();
 //                    classNameAttrsMap.put(className, Lhm);
