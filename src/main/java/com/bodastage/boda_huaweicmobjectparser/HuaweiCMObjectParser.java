@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.9";
+    final static String VERSION = "1.0.10";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -385,10 +385,11 @@ public class HuaweiCMObjectParser {
                     }
 
                 } catch (Exception e) {
+                    System.out.println("Error");
                     System.out.println(e.getMessage());
                     logger.error("class name:" + className);
-                    logger.error("MO Parameter List:" + moColumns.get(className).toString());
-                    logger.error("MO parameter values:" + classNameAttrsMap.toString());
+//                    logger.error("MO Parameter List:" + moColumns.get(className).toString());
+//                    logger.error("MO parameter values:" + classNameAttrsMap.toString());
                     System.out.println("Skipping file: " + this.baseFileName + "\n");
 
                     resetInternalVariables();
