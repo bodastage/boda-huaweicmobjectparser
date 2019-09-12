@@ -46,7 +46,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.10";
+    final static String VERSION = "1.0.11";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -285,12 +285,12 @@ public class HuaweiCMObjectParser {
             }
             
             String[] moAndParameters = line.split(":");
-            String mo = moAndParameters[0];
+            String mo = moAndParameters[0].toUpperCase();
             String[] parameters = moAndParameters[1].split(",");
 
             Stack parameterStack = new Stack();
             for (int i = 0; i < parameters.length; i++) {
-                parameterStack.push(parameters[i]);
+                parameterStack.push(parameters[i].toUpperCase());
             }
             moColumns.put(mo, parameterStack);
             //domainHeaderAdded.put(mo, Boolean.TRUE);
@@ -535,7 +535,7 @@ public class HuaweiCMObjectParser {
                 String attrName = attribute.getName().getLocalPart();
                 String attrValue = attribute.getValue();
                 if (attrName.equals("name")) {
-                    className = attrValue;
+                    className = attrValue.toUpperCase();
                     //className = attrValue;
                     LinkedHashMap<String, String> Lhm = new LinkedHashMap<String, String>();
 //                    classNameAttrsMap.put(className, Lhm);
