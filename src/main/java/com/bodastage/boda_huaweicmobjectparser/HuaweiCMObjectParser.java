@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,7 +47,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.11";
+    final static String VERSION = "1.0.12";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -180,6 +181,10 @@ public class HuaweiCMObjectParser {
 //            = new LinkedHashMap<String, LinkedHashMap<String, String>>();
     LinkedHashMap<String, String> classNameAttrsMap = new LinkedHashMap<String, String>();
     
+    //This list should be ignored when checking for switches
+    private String[] moListWithoutMVValues = new String[]{"GCELLHOINTERRATLDB", "INVENTORYBOARD"};
+
+    
     /**
      * ClassName tag stack.
      *
@@ -251,6 +256,9 @@ public class HuaweiCMObjectParser {
      * Extract managed objects and their parameters
      */
     private Boolean extractParametersOnly = false;
+    
+    
+    private Boolean separateSwitches = false;
     
     /**
      * Add meta fields to each MO.
@@ -562,8 +570,15 @@ public class HuaweiCMObjectParser {
                 if (attrName.equals("value")) {
                     paramValue = attrValue;
                     
+                    //e.g MO_BTS3900 -< MO and BTS3900
+                    String[] moNameMinusNE = className.split("_");
                     String tempValue = paramValue;
-                    if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+$") && !paramName.equals("ACTION")) {
+                    if (tempValue.matches("[^-]+-[^-]+.*") 
+                        && !Arrays.asList(moListWithoutMVValues).contains(moNameMinusNE[0])
+                        && !paramName.equals("ACTION") ) {
+//                    if (tempValue.matches("([^-]+-[^-]+&).*") && !paramName.equals("ACTION") ) {
+//                    if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+") && !paramName.equals("ACTION") ) {
+//                    if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+$") && !paramName.equals("ACTION")) {
                         
 
                         String mvParameter = className + "_" + paramName;
@@ -581,7 +596,7 @@ public class HuaweiCMObjectParser {
                             String childParameter = vArray[0];
                             String childParameterValue = vArray[1];
                             String child =  paramName + "_" + childParameter;
-                            
+                            child = child.toUpperCase();
                             classNameAttrsMap.put(child, childParameterValue);
                             
                             if( parserState == ParserStates.EXTRACTING_PARAMETERS){
@@ -704,19 +719,28 @@ public class HuaweiCMObjectParser {
                     String parameterName = me.getKey();
 
                     String tempValue = classNameAttrsMap.get(parameterName);
+                    //e.g MO_BTS3900 -< MO and BTS3900
+                    String[] moNameMinusNE = className.split("_");
+                    
+                    if (tempValue.matches("[^-]+-[^-]+.*") 
+                        && !Arrays.asList(moListWithoutMVValues).contains(moNameMinusNE[0]) 
+                        && !parameterName.equals("ACTION")) {
+//                      tempValue.matches("[^-]+-[^-]+") 
 //                    if (tempValue.matches("([^-]+-[^-]+&).*") && !parameterName.equals("ACTION") ) {
-                    if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+") && !parameterName.equals("ACTION") ) {
+//                    if (tempValue.matches("^([^-]+-[^-]+)(?:&[^-]+-[^-]+)+") && !parameterName.equals("ACTION") ) {
                         String mvParameter = className + "_" + parameterName;
                         parameterChildMap.put(mvParameter, null);
                         Stack children = new Stack();
 
                         String[] valueArray = tempValue.split("&");
-
+                        
+                        System.out.println(valueArray.toString());
                         for (int j = 0; j < valueArray.length; j++) {
                             String v = valueArray[j];
                             String[] vArray = v.split("-");
                             String childParameter = vArray[0];
                             String child =  parameterName + "_" + childParameter;
+                            child = child.toUpperCase();
                             if(!moiAttributes.contains(child)){
                                 moiAttributes.push(child);
                             }
@@ -1027,6 +1051,15 @@ public class HuaweiCMObjectParser {
     }
     
     /**
+     * Should switch parameters be split 
+     * 
+     * @param boolean b
+     */
+    public void separateIndividualSwitches(Boolean b){
+        separateSwitches = b;
+    }
+    
+    /**
      * @param args the command line arguments
      *
      * @since 1.0.0
@@ -1046,8 +1079,13 @@ public class HuaweiCMObjectParser {
        Boolean showVersion = false;
        Boolean attachMetaFields = false; //Attach mattachMetaFields FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE
        
+       //Parameter that have swtiches in the avlue liks BIT1-0&BIT2-1 should be 
+       //separated into individual parameters
+       Boolean sepSwitches = false;
+       
        try{ 
             options.addOption( "p", "extract-parameters", false, "extract only the managed objects and parameters" );
+            options.addOption( "s", "separate-switches", false, "extract switch values as separate parameters." );
             options.addOption( "v", "version", false, "display version" );
             options.addOption( "m", "meta-fields", false, "add meta fields to extracted parameters. FILENAME,DATETIME,NE_TECHNOLOGY,NE_VENDOR,NE_VERSION,NE_TYPE" );
             options.addOption( Option.builder("i")
@@ -1095,6 +1133,10 @@ public class HuaweiCMObjectParser {
                 onlyExtractParameters  = true;
             }
             
+            
+            if(cmd.hasOption('s')){
+                sepSwitches  = true;
+            }
             if(cmd.hasOption('m')){
                 attachMetaFields  = true;
             }
@@ -1152,12 +1194,16 @@ public class HuaweiCMObjectParser {
             HuaweiCMObjectParser cmParser = new HuaweiCMObjectParser();
 
 
-            if(onlyExtractParameters == true ){
+            if(onlyExtractParameters){
                 cmParser.setExtractParametersOnly(true);
             }
             
-            if( attachMetaFields == true ){
+            if( attachMetaFields){
                 cmParser.setExtractMetaFields(true);
+            }
+            
+            if(sepSwitches){
+                cmParser.separateIndividualSwitches(true);
             }
             
             if(  parameterConfigFile != null  ){
