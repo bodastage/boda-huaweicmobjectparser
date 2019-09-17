@@ -1,5 +1,6 @@
 package com.bodastage.boda_huaweicmobjectparser;
 
+import java.io.File;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,6 +34,18 @@ public class AppTest
      */
     public void testApp()
     {
+        
+        ClassLoader classLoader = getClass().getClassLoader();
+        File inFile = new File(classLoader.getResource("gexport.xml").getFile());
+        
+        HuaweiCMObjectParser parser = new HuaweiCMObjectParser();
+        String inputFile = inFile.getAbsolutePath();
+        
+        String outputFolder = System.getProperty("java.io.tmpdir");
+        
+        String[] args = { "-i", inputFile, "-o", outputFolder};
+        
         assertTrue( true );
+        
     }
 }
