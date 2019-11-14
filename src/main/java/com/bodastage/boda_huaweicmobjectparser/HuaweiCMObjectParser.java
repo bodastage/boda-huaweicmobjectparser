@@ -47,7 +47,7 @@ import org.apache.commons.cli.Option;
  */
 public class HuaweiCMObjectParser {
 
-    final static String VERSION = "1.0.12";
+    final static String VERSION = "1.0.13";
     
     Logger logger = LoggerFactory.getLogger(HuaweiCMObjectParser.class);
         
@@ -182,8 +182,7 @@ public class HuaweiCMObjectParser {
     LinkedHashMap<String, String> classNameAttrsMap = new LinkedHashMap<String, String>();
     
     //This list should be ignored when checking for switches
-    private String[] moListWithoutMVValues = new String[]{"GCELLHOINTERRATLDB", "INVENTORYBOARD"};
-
+    private String[] moListWithoutMVValues = new String[]{"GCELLHOINTERRATLDB", "INVENTORYBOARD", "S1INTERFACE"};
     
     /**
      * ClassName tag stack.
